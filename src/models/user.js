@@ -1,5 +1,6 @@
 const mongoose = require("mongoose")
 const validator = require('validator/lib/isEmail')
+const bcrypt = require('bcrypt')
 
 const userSchema = new mongoose.Schema({//membuat collection di mongoose, nama user akan dirubah toLowerCase dan dibuat plural (tambah s) oleh mongoose scr otomatis
     name:{
@@ -17,7 +18,7 @@ const userSchema = new mongoose.Schema({//membuat collection di mongoose, nama u
         type: String,
         required: true,
         validate(value){
-        if(!validator.isEmail(value)){
+        if(!validator(value)){
             throw new Error ("Email tidak valid")
             }
         }
@@ -42,6 +43,14 @@ const userSchema = new mongoose.Schema({//membuat collection di mongoose, nama u
             }
         }
     }
+})
+
+userSchema.pre('save', async function (next) { // do something before save the document () next akan diisi oleh mongoose
+    const user = this // access to the user document {name, age, email, password}
+
+        user.password = await bcrypt.hash(user.password, 8) // hash the new incoming password
+
+    next() // finish
 })
 
 const User = mongoose.model('User', userSchema)
